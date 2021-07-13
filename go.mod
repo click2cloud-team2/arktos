@@ -9,7 +9,6 @@ go 1.13
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/Azure/azure-sdk-for-go v35.0.0+incompatible
-
 	github.com/Azure/go-autorest/autorest v0.9.0
 	github.com/Azure/go-autorest/autorest/adal v0.5.0
 	github.com/Azure/go-autorest/autorest/to v0.2.0
@@ -89,8 +88,8 @@ require (
 	github.com/heketi/tests v0.0.0-20151005000721-f3775cbcefd6 // indirect
 	github.com/jonboulle/clockwork v0.1.0
 	github.com/json-iterator/go v1.1.8
-	github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024
-	github.com/jteeuwen/go-bindata v3.0.7+incompatible
+	github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024 // indirect
+	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/karrick/godirwalk v1.7.5 // indirect
 	github.com/libopenstorage/openstorage v1.0.0
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
@@ -164,7 +163,7 @@ require (
 	honnef.co/go/tools v0.0.1-2019.2.2
 	k8s.io/api v0.0.0
 	k8s.io/apiextensions-apiserver v0.0.0
-	k8s.io/apimachinery v0.0.0
+	k8s.io/apimachinery v0.21.2
 	k8s.io/apiserver v0.0.0
 	k8s.io/arktos-ext v0.0.0
 	k8s.io/cli-runtime v0.0.0
