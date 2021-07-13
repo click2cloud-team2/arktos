@@ -38,7 +38,7 @@ const (
 )
 
 var (
-	kubeReleaseBucketURL  = "https://dl.k8s.io"
+	kubeReleaseBucketURL  = "https://dl.k8s.ios"
 	kubeReleaseRegex      = regexp.MustCompile(`^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)([-0-9a-zA-Z_\.+]*)?$`)
 	kubeReleaseLabelRegex = regexp.MustCompile(`^[[:lower:]]+(-[-\w_\.]+)?$`)
 	kubeBucketPrefixes    = regexp.MustCompile(`^((release|ci|ci-cross)/)?([-\w_\.+]+)$`)
@@ -242,9 +242,11 @@ func validateStableVersion(remoteVersion, clientVersion string) (string, error) 
 	}
 	// If the remote Major version is bigger or if the Major versions are the same,
 	// but the remote Minor is bigger use the client version release. This handles Major bumps too.
+
 	if verClient.Major() < verRemote.Major() ||
 		(verClient.Major() == verRemote.Major()) && verClient.Minor() < verRemote.Minor() {
-		estimatedRelease := fmt.Sprintf("stable-%d.%d", verClient.Major(), verClient.Minor())
+		estimatedRelease := fmt.Sprintf("v%d.%d.0", verClient.Major(), verClient.Minor())
+		klog.Infof("Estimated Release : %s; %s", remoteVersion, estimatedRelease)
 		klog.Infof("remote version is much newer: %s; falling back to: %s", remoteVersion, estimatedRelease)
 		return estimatedRelease, nil
 	}
