@@ -409,10 +409,10 @@ EOF
             "${DOCKER[@]}" rmi "${release_docker_image_tag}" 2>/dev/null || true
             "${DOCKER[@]}" tag "${docker_image_tag}" "${release_docker_image_tag}" 2>/dev/null
           fi
-        else
+     
           # not a release
-          kube::log::status "Deleting docker image ${docker_image_tag}"
-          "${DOCKER[@]}" rmi "${docker_image_tag}" &>/dev/null || true
+     #     kube::log::status "Deleting docker image ${docker_image_tag}"
+      #    "${DOCKER[@]}" rmi "${docker_image_tag}" &>/dev/null || true
         fi
       ) &
     done

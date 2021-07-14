@@ -244,7 +244,8 @@ func validateStableVersion(remoteVersion, clientVersion string) (string, error) 
 	// but the remote Minor is bigger use the client version release. This handles Major bumps too.
 	if verClient.Major() < verRemote.Major() ||
 		(verClient.Major() == verRemote.Major()) && verClient.Minor() < verRemote.Minor() {
-		estimatedRelease := fmt.Sprintf("stable-%d.%d", verClient.Major(), verClient.Minor())
+//		estimatedRelease := fmt.Sprintf("stable-%d.%d", verClient.Major(), verClient.Minor())
+estimatedRelease := fmt.Sprintf("v%d.%d.0", verClient.Major(), verClient.Minor())
 		klog.Infof("remote version is much newer: %s; falling back to: %s", remoteVersion, estimatedRelease)
 		return estimatedRelease, nil
 	}

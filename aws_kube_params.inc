@@ -2,11 +2,11 @@ export KUBERNETES_PROVIDER=aws
 export CLOUD_PROVIDER=${KUBERNETES_PROVIDER}
 export KUBE_AWS_INSTANCE_PREFIX=arktos
 
-export KUBE_AWS_ZONE=us-east-1a
-export VPC_ID=vpc-2d43fc57
-export SUBNET_ID=subnet-5d076e73
-export NUM_NODES=2
-export KUBEMARK_NUM_NODES=100
+export KUBE_AWS_ZONE=us-east-2b
+export VPC_ID=vpc-06bb877e
+export SUBNET_ID=subnet-40cc571d
+export NUM_NODES=1
+export KUBEMARK_NUM_NODES=2
 
 export KUBEMARK_MASTER_SIZE=t2.xlarge
 export MASTER_SIZE=t2.xlarge
@@ -29,9 +29,8 @@ export PRESET_KUBE_MINION1_IP=172.31.11.206
 export PRESET_KUBE_SUBNET_CIDR=172.31.0.0/16
 export PRESET_KUBE_VPC_CIDR_BASE=172.31.0.0/
 export PRESET_IGW_ID=igw-ff4ae997
-export PRESET_ROUTE_TABLE_ID=rtb-43539d28
-export PRESET_MASTER_SG_ID=sg-0454a7fee09174cdb
-export PRESET_NODE_SG_ID=sg-0f04c3466926ecd72
-
+export PRESET_ROUTE_TABLE_ID=rtb-57352c2c
+export PRESET_MASTER_SG_ID=sg-2dd81818
+export PRESET_NODE_SG_ID=sg-2dd81818
 export PRESET_SERVER_BINARY_TAR_URL=/tmp/kubernetes-server-linux-amd64.tar.gz
 export PRESET_BOOTSTRAP_SCRIPT_URL=/tmp/bootstrap-script
