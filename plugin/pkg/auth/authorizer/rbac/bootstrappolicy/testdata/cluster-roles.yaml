@@ -603,9 +603,38 @@ items:
     - patch
     - update
   - apiGroups:
+    - coordination.k8s.io
+    resources:
+    - leases
+    verbs:
+    - create
+  - apiGroups:
+    - coordination.k8s.io
+    resourceNames:
+    - kube-controller-manager
+    resources:
+    - leases
+    verbs:
+    - get
+    - update
+  - apiGroups:
     - ""
     resources:
     - endpoints
+    verbs:
+    - create
+  - apiGroups:
+    - ""
+    resourceNames:
+    - kube-controller-manager
+    resources:
+    - endpoints
+    verbs:
+    - get
+    - update
+  - apiGroups:
+    - ""
+    resources:
     - secrets
     - serviceaccounts
     verbs:
@@ -620,7 +649,6 @@ items:
     - ""
     resources:
     - configmaps
-    - endpoints
     - namespaces
     - secrets
     - serviceaccounts
@@ -629,7 +657,6 @@ items:
   - apiGroups:
     - ""
     resources:
-    - endpoints
     - secrets
     - serviceaccounts
     verbs:
@@ -719,6 +746,21 @@ items:
     - patch
     - update
   - apiGroups:
+    - coordination.k8s.io
+    resources:
+    - leases
+    verbs:
+    - create
+  - apiGroups:
+    - coordination.k8s.io
+    resourceNames:
+    - kube-scheduler
+    resources:
+    - leases
+    verbs:
+    - get
+    - update
+  - apiGroups:
     - ""
     resources:
     - endpoints
@@ -731,9 +773,7 @@ items:
     resources:
     - endpoints
     verbs:
-    - delete
     - get
-    - patch
     - update
   - apiGroups:
     - ""
