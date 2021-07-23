@@ -43,6 +43,7 @@ export ALLOW_PRIVILEGED=true
 
 # onebox has option to choose cni plugin: bridge(default), alktron(neutron integration), mizar
 CNIPLUGIN=${CNIPLUGIN:-"bridge"}
+[ "${CNIPLUGIN}" == "mizar" ] && export ARKTOS_NO_CNI_PREINSTALLED=y
 
 # This command builds and runs a local kubernetes cluster.
 # You may need to run this as root to allow kubelet to open docker's socket,

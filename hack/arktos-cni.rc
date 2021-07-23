@@ -29,15 +29,14 @@ setup_cni_conf() {
     if [ -s ${conf_target_file} ]; then
       echo "${conf_target_file} already exists; keep it."
       return
-    else
+    elif [ $(ls -A "${cni_conf_dir}") ]; then
       echo "deleting other existing conf files"
       sudo rm -rf ${cni_conf_dir}/*
     fi
 
     echo "copying ${conf_source_file} to ${conf_target_file}..."
     local cni_conf_dir=$(dirname ${conf_target_file})
-    local backup_dir="$(dirname ${cni_conf_dir})/$(basename ${cni_conf_dir})_"$(date -d "today" +"%Y%m%d%H%M")
-    test -d ${cni_conf_dir} && sudo mv ${cni_conf_dir} ${backup_dir}
+
     sudo mkdir -p ${cni_conf_dir}
     sudo cp ${conf_source_file} ${conf_target_file}
     echo "copied ${conf_source_file} to ${conf_target_file}"
@@ -69,23 +68,6 @@ install_cni_bridge() {
     echo "done with bridge cni plugin installation"
 }
 
-install_cni_mizar() {
-    echo "Ensuring firewall to allow traffic forward by default"
-    sudo iptables -S FORWARD | grep '\-P' | grep DROP && sudo iptables -P FORWARD ACCEPT
-    sudo iptables -S FORWARD | grep '\-P'
-
-    export FEATURE_GATES="AllAlpha=false,MandatoryArktosNetwork=true"
-    export ARKTOS_NETWORK_TEMPLATE=mizar
-
-    ensure_cni_binaries
-
-    [ ! -f "${cni_conf_dir}/10-mizarcni.conf" ] && wget https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/etc/cni/10-mizarcni.conf -P /tmp/
-
-    local cni_conf_source=/tmp/10-mizarcni.conf
-    setup_cni_conf  "${cni_conf_dir}/10-mizarcni.conf" ${cni_conf_source}
-
-    echo "done with mizar cni plugin installation"
-}
 
 build_alktron() {
     local ALKTRON_DIR=$1
@@ -191,7 +173,7 @@ install_mizar_arktos_containerd () {
       sudo systemctl stop containerd
       sudo mv /usr/bin/containerd /usr/bin/containerd.bak
       sudo cp $HOME/arktos-containerd/containerd /usr/bin/
-      sudo systemctl restart containerd
+#      sudo systemctl restart containerd
       sudo systemctl restart docker
     else
       echo "arktos containerd found..."
@@ -212,8 +194,16 @@ elif [ "${CNIPLUGIN}" == "bridge" ]; then
     install_cni_bridge
 elif [ "${CNIPLUGIN}" == "mizar" ]; then
     echo "cni plugin is mizar; arktos will use mizar to provision pod network"
+
+    export FEATURE_GATES="AllAlpha=false,MandatoryArktosNetwork=true"
+    export ARKTOS_NETWORK_TEMPLATE=mizar
+
+    echo "deleting other existing conf files"
+    sudo rm -rf ${cni_conf_dir}/*
+
     install_mizar_arktos_containerd
-    install_cni_mizar
+
+    echo "mizar cni plugin installation will continue once cluster is up."
 elif [ "${CNIPLUGIN}" == "alktron" ]; then
     ensure_devstack
     install_arktos_containerd
