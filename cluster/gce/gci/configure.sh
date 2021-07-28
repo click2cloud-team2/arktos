@@ -381,7 +381,7 @@ function install-mizar-yml {
   mkdir -p "${mizar_dir}"
   mv "${KUBE_HOME}/deploy.mizar.yaml" "${mizar_dir}"
   echo "change docker registry to gcr.io"
-  sed -i 's+quay.io/coreos+gcr.io/workload-controller-manager+g' ${mizar}/deploy.mizar.yaml
+  sed -i 's+quay.io/coreos+gcr.io/workload-controller-manager+g' ${mizar_dir}/deploy.mizar.yaml
 }
 
 function install-cni-binaries {
