@@ -50,7 +50,8 @@ if [[ ${NODE_LOCAL_SSDS:-} -ge 1 ]] && [[ ! -z ${NODE_LOCAL_SSDS_EXT:-} ]] ; the
 fi
 
 if [[ "${MASTER_OS_DISTRIBUTION}" == "gci" ]]; then
-    DEFAULT_GCI_PROJECT=google-containers
+#    DEFAULT_GCI_PROJECT=google-containers
+    DEFAULT_GCI_PROJECT=ubuntu-os-cloud
     if [[ "${GCI_VERSION}" == "cos"* ]]; then
         DEFAULT_GCI_PROJECT=cos-cloud
     fi
@@ -71,7 +72,7 @@ fi
 #   NODE_IMAGE_PROJECT
 function set-linux-node-image() {
   if [[ "${NODE_OS_DISTRIBUTION}" == "gci" ]]; then
-    DEFAULT_GCI_PROJECT=google-containers
+    DEFAULT_GCI_PROJECT=ubuntu-os-cloud
     if [[ "${GCI_VERSION}" == "cos"* ]]; then
       DEFAULT_GCI_PROJECT=cos-cloud
     fi
