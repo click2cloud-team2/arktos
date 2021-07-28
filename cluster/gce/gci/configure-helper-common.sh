@@ -3142,6 +3142,9 @@ function start-cluster-networking {
     bridge)
     start-bridge-networking
     ;;
+    mizar)
+    start-mizar-ds
+    ;;
   esac
 }
 
@@ -3152,6 +3155,16 @@ function start-flannel-ds {
     kubectl apply -f "${KUBE_HOME}/flannel/kube-flannel.yml"
   else 
     echo "failed to install flannel ds, cannot find required yaml file"
+  fi
+}
+
+function start-mizar-ds {
+  if [[ -f "${KUBE_HOME}/mizar/deploy.mizar.yaml" ]]; then
+    echo "installing install ds"
+    sleep 5
+    kubectl apply -f "${KUBE_HOME}//mizar/deploy.mizar.yaml"
+  else
+    echo "failed to install mizar ds, cannot find required yaml file"
   fi
 }
 

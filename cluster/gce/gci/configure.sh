@@ -67,7 +67,7 @@ function download-kube-env {
     # Convert the yaml format file into a shell-style file.
     eval $(python -c '''
 import pipes,sys,yaml
-for k,v in yaml.load(sys.stdin).iteritems():
+for k,v in yaml.load(sys.stdin).items():
   print("readonly {var}={value}".format(var = k, value = pipes.quote(str(v))))
 ''' < "${tmp_kube_env}" > "${KUBE_HOME}/kube-env")
     rm -f "${tmp_kube_env}"
@@ -157,7 +157,7 @@ function download-kube-master-certs {
     # Convert the yaml format file into a shell-style file.
     eval $(python -c '''
 import pipes,sys,yaml
-for k,v in yaml.load(sys.stdin).iteritems():
+for k,v in yaml.load(sys.stdin).items():
   print("readonly {var}={value}".format(var = k, value = pipes.quote(str(v))))
 ''' < "${tmp_kube_master_certs}" > "${KUBE_HOME}/kube-master-certs")
     rm -f "${tmp_kube_master_certs}"
@@ -313,6 +313,9 @@ function install-cni-network {
     bridge)
     setup-bridge-cni-conf
     ;;
+    mizar)
+    install-mizar-yml
+    ;;
   esac
 }
 
@@ -369,6 +372,16 @@ function install-flannel-yml {
   mv "${KUBE_HOME}/kube-flannel.yml" "${flannel_dir}"
   echo "change docker registry to gcr.io"
   sed -i 's+quay.io/coreos+gcr.io/workload-controller-manager+g' ${flannel_dir}/kube-flannel.yml
+}
+
+function install-mizar-yml {
+  echo "downloading mizar"
+  download-or-bust "" "https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/etc/deploy/deploy.mizar.yaml"
+  local -r mizar_dir="${KUBE_HOME}/mizar"
+  mkdir -p "${mizar_dir}"
+  mv "${KUBE_HOME}/deploy.mizar.yaml" "${flannel_dir}"
+  echo "change docker registry to gcr.io"
+  sed -i 's+quay.io/coreos+gcr.io/workload-controller-manager+g' ${mizar}/deploy.mizar.yaml
 }
 
 function install-cni-binaries {
@@ -528,6 +541,7 @@ function load-docker-images {
 function install-kube-binary-config {
   cd "${KUBE_HOME}"
   local -r server_binary_tar_urls=( $(split-commas "${SERVER_BINARY_TAR_URL}") )
+  echo "SERVER_BINARY_TAR_URL : ${SERVER_BINARY_TAR_URL}"
   local -r server_binary_tar="${server_binary_tar_urls[0]##*/}"
   if [[ -n "${SERVER_BINARY_TAR_HASH:-}" ]]; then
     local -r server_binary_tar_hash="${SERVER_BINARY_TAR_HASH}"

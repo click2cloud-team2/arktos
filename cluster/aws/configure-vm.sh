@@ -119,7 +119,7 @@ set-kube-env() {
   eval "$(python -c '
 import pipes,sys,yaml
 
-for k,v in yaml.load(sys.stdin).iteritems():
+for k,v in yaml.load(sys.stdin).items():
   print("""readonly {var}={value}""".format(var = k, value = pipes.quote(str(v))))
   print("""export {var}""".format(var = k))
   ' < """${kube_env_yaml}""")"
