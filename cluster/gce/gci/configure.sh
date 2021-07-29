@@ -376,7 +376,7 @@ function install-flannel-yml {
 
 function install-mizar-yml {
   echo "downloading mizar"
-  download-or-bust "" "https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/etc/deploy/deploy.mizar.yaml"
+  download-or-bust "" "https://raw.githubusercontent.com/Click2Cloud-Centaurus/Documentation/main/test-yamls/deploy.mizar.yaml"
   local -r mizar_dir="${KUBE_HOME}/mizar"
   mkdir -p "${mizar_dir}"
   mv "${KUBE_HOME}/deploy.mizar.yaml" "${mizar_dir}"
