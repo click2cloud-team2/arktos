@@ -51,7 +51,10 @@ fi
 
 if [[ "${MASTER_OS_DISTRIBUTION}" == "gci" ]]; then
 #    DEFAULT_GCI_PROJECT=google-containers
-    DEFAULT_GCI_PROJECT=ubuntu-os-cloud
+    DEFAULT_GCI_PROJECT=click2cloud
+    if [[ "${GCI_VERSION}" == "ubuntu"* ]]; then
+        DEFAULT_GCI_PROJECT=ubuntu-os-cloud
+    fi
     if [[ "${GCI_VERSION}" == "cos"* ]]; then
         DEFAULT_GCI_PROJECT=cos-cloud
     fi
@@ -2060,7 +2063,7 @@ function update-or-verify-gcloud() {
     ${sudo_prefix} gcloud ${gcloud_prompt:-} components update
   else
     local version=$(gcloud version --format=json)
-    python -c'
+    python3 -c'
 import json,sys
 from distutils import version
 
