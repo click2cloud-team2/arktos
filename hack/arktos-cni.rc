@@ -29,14 +29,12 @@ setup_cni_conf() {
     if [ -s ${conf_target_file} ]; then
       echo "${conf_target_file} already exists; keep it."
       return
-    elif [ $(ls -A "${cni_conf_dir}") ]; then
-      echo "deleting other existing conf files"
-      sudo rm -rf ${cni_conf_dir}/*
     fi
 
     echo "copying ${conf_source_file} to ${conf_target_file}..."
     local cni_conf_dir=$(dirname ${conf_target_file})
-
+    local backup_dir="/var/backups/$(basename ${cni_conf_dir})_"$(date -d "today" +"%Y%m%d%H%M")
+    test -d ${cni_conf_dir} && sudo mv ${cni_conf_dir} ${backup_dir}
     sudo mkdir -p ${cni_conf_dir}
     sudo cp ${conf_source_file} ${conf_target_file}
     echo "copied ${conf_source_file} to ${conf_target_file}"
@@ -68,6 +66,50 @@ install_cni_bridge() {
     echo "done with bridge cni plugin installation"
 }
 
+install_cni_mizar() {
+
+    [ ! -d "${cni_conf_dir}" ] && sudo mkdir -p "${cni_conf_dir}"
+    find /etc/cni/net.d/ -type f -not -name '10-mizarcni.conf' -delete
+
+    export FEATURE_GATES="AllAlpha=false,MandatoryArktosNetwork=true"
+    export ARKTOS_NETWORK_TEMPLATE=mizar
+
+}
+
+check_mizar_prerequisite() {
+    kernel_version=`uname -r`
+    major=$(echo $kernel_version | cut -d. -f1)
+    minor=$(echo "$kernel_version" | cut -d. -f2)
+    if [[ "$major" < "5" ]] || [[ "$minor" < "6" ]]; then
+        echo "Mizar requires an updated kernel: linux-5.6-rc2 for TCP to function correctly. Current version is $kernel_version"
+        echo "Please install updated kernel using bootstrap.sh from mizar repository(https://github.com/CentaurusInfra/mizar)."
+        exit
+    fi
+
+    msg="Please install Mizar dependencies using bootstrap.sh from mizar repository (https://github.com/CentaurusInfra/mizar)."
+    if [ -f "/usr/bin/python3" ]; then
+        py_ver=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+        parsedVersion=$(echo "${py_ver//./}")
+        if [[ "$parsedVersion" -lt "37" ]] ; then
+            echo "$msg"
+            exit
+        else
+            # Checking the python packages required for mizar, installed using bootstrap.sh
+            declare -a packages=( netaddr docker grpcio grpcio-tools scapy kubernetes )
+            for package in ${packages[@]}; do
+                if [[ $(pip3 freeze | grep "\b$package") ]]; then
+                  continue
+                else
+                  echo "$msg"
+                  exit
+                fi
+            done
+        fi
+    else
+        echo "$msg"
+        exit
+    fi
+}
 
 build_alktron() {
     local ALKTRON_DIR=$1
@@ -173,7 +215,7 @@ install_mizar_arktos_containerd () {
       sudo systemctl stop containerd
       sudo mv /usr/bin/containerd /usr/bin/containerd.bak
       sudo cp $HOME/arktos-containerd/containerd /usr/bin/
-#      sudo systemctl restart containerd
+      sudo systemctl start containerd
       sudo systemctl restart docker
     else
       echo "arktos containerd found..."
@@ -189,21 +231,15 @@ if [[ -n "${ARKTOS_NO_CNI_PREINSTALLED}" ]]; then
     echo "CNI plugin will be installed after cluster is started"
     echo "Right now the minimum common cni binary package is being installed only"
     ensure_cni_binaries
+    if [ "${CNIPLUGIN}" == "mizar" ]; then
+      echo "cni plugin is mizar; arktos will use mizar to provision pod network"
+      check_mizar_prerequisite
+      install_mizar_arktos_containerd
+      install_cni_mizar
+    fi
 elif [ "${CNIPLUGIN}" == "bridge" ]; then
     echo "cni plugin is bridge; arktos will use bridge to provision pod network"
     install_cni_bridge
-elif [ "${CNIPLUGIN}" == "mizar" ]; then
-    echo "cni plugin is mizar; arktos will use mizar to provision pod network"
-
-    export FEATURE_GATES="AllAlpha=false,MandatoryArktosNetwork=true"
-    export ARKTOS_NETWORK_TEMPLATE=mizar
-
-    echo "deleting other existing conf files"
-    sudo rm -rf ${cni_conf_dir}/*
-
-    install_mizar_arktos_containerd
-
-    echo "mizar cni plugin installation will continue once cluster is up."
 elif [ "${CNIPLUGIN}" == "alktron" ]; then
     ensure_devstack
     install_arktos_containerd
