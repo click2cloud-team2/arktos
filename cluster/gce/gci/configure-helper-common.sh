@@ -3275,6 +3275,8 @@ EOF
 }
 
 function wait-till-apiserver-ready() {
+  cp /home/kubernetes/bin/kubectl /usr/local/bin/kubectl
+  chmod +x /usr/local/bin/kubectl
   until kubectl get nodes; do
     sleep 5
   done
