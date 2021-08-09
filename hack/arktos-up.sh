@@ -112,7 +112,6 @@ done
 
 if [ "x${GO_OUT}" == "x" ]; then
     make -j4 -C "${KUBE_ROOT}" WHAT="cmd/kubectl cmd/hyperkube cmd/kube-apiserver cmd/kube-controller-manager cmd/workload-controller-manager cmd/cloud-controller-manager cmd/kubelet cmd/kube-proxy cmd/kube-scheduler"
-    [[ "${CNIPLUGIN}" == "mizar" ]] && make all WHAT="cmd/arktos-network-controller"
 else
     echo "skipped the build."
 fi
@@ -482,13 +481,6 @@ if [[ "${START_MODE}" != "kubeletonly" ]]; then
   for ((i = $((APISERVER_NUMBER - 1)) ; i >= 0 ; i--)); do
     kube::common::start_apiserver $i
   done
-
-  # Applying mizar cni
-  if [[ "${CNIPLUGIN}" = "mizar" ]]; then
-    ${KUBECTL} --kubeconfig="${CERT_DIR}/admin.kubeconfig" apply -f https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/etc/deploy/deploy.mizar.yaml
-    ${KUBE_ROOT}/_output/local/bin/linux/amd64/arktos-network-controller --kubeconfig=/var/run/kubernetes/admin.kubeconfig --kube-apiserver-ip="$(hostname -I | awk '{print $1}')" > /tmp/arktos-network-controller.log 2>&1 &
-  fi
-
   #remove workload controller manager cluster role and rolebinding applying per this already be added to bootstrappolicy
   
   # If there are other resources ready to sync thru workload-controller-mananger, please add them to the following clusterrole file
@@ -527,6 +519,12 @@ if [[ "${START_MODE}" != "nokubelet" ]]; then
         print_color "Unsupported host OS.  Must be Linux or Mac OS X, kubelet aborted."
         ;;
     esac
+fi
+
+# Applying mizar cni
+if [[ "${CNIPLUGIN}" = "mizar" ]]; then
+  ${KUBECTL} --kubeconfig="${CERT_DIR}/admin.kubeconfig" apply -f https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/etc/deploy/deploy.mizar.yaml
+  ${KUBE_ROOT}/_output/local/bin/linux/amd64/arktos-network-controller --kubeconfig=/var/run/kubernetes/admin.kubeconfig --kube-apiserver-ip="$(hostname -I | awk '{print $1}')" > /tmp/arktos-network-controller.log 2>&1 &
 fi
 
 if [[ -n "${PSP_ADMISSION}" && "${AUTHORIZATION_MODE}" = *RBAC* ]]; then

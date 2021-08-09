@@ -76,41 +76,6 @@ install_cni_mizar() {
 
 }
 
-check_mizar_prerequisite() {
-    kernel_version=`uname -r`
-    major=$(echo $kernel_version | cut -d. -f1)
-    minor=$(echo "$kernel_version" | cut -d. -f2)
-    if [[ "$major" < "5" ]] || [[ "$minor" < "6" ]]; then
-        echo "Mizar requires an updated kernel: linux-5.6-rc2 for TCP to function correctly. Current version is $kernel_version"
-        echo "Please install updated kernel using bootstrap.sh from mizar repository(https://github.com/CentaurusInfra/mizar)."
-        exit
-    fi
-
-    msg="Please install Mizar dependencies using bootstrap.sh from mizar repository (https://github.com/CentaurusInfra/mizar)."
-    if [ -f "/usr/bin/python3" ]; then
-        py_ver=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-        parsedVersion=$(echo "${py_ver//./}")
-        if [[ "$parsedVersion" -lt "37" ]] ; then
-            echo "$msg"
-            exit
-        else
-            # Checking the python packages required for mizar, installed using bootstrap.sh
-            declare -a packages=( netaddr docker grpcio grpcio-tools scapy kubernetes )
-            for package in ${packages[@]}; do
-                if [[ $(pip3 freeze | grep "\b$package") ]]; then
-                  continue
-                else
-                  echo "$msg"
-                  exit
-                fi
-            done
-        fi
-    else
-        echo "$msg"
-        exit
-    fi
-}
-
 build_alktron() {
     local ALKTRON_DIR=$1
     [ "${ALKTRON_DIR}" == "" ] && die "expected alktron repo folder; invalid parameter"
@@ -233,7 +198,6 @@ if [[ -n "${ARKTOS_NO_CNI_PREINSTALLED}" ]]; then
     ensure_cni_binaries
     if [ "${CNIPLUGIN}" == "mizar" ]; then
       echo "cni plugin is mizar; arktos will use mizar to provision pod network"
-      check_mizar_prerequisite
       install_mizar_arktos_containerd
       install_cni_mizar
     fi
