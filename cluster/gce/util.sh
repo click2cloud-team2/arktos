@@ -53,6 +53,10 @@ if [[ "${MASTER_OS_DISTRIBUTION}" == "gci" ]]; then
     DEFAULT_GCI_PROJECT=google-containers
     if [[ "${GCI_VERSION}" == "cos"* ]]; then
         DEFAULT_GCI_PROJECT=cos-cloud
+    elif [[ "${GCI_VERSION}" == "ubuntu"* ]]; then
+      DEFAULT_GCI_PROJECT=ubuntu-os-cloud
+    else
+      DEFAULT_GCI_PROJECT=${KUBE_GCE_MASTER_PROJECT}
     fi
     MASTER_IMAGE_PROJECT=${KUBE_GCE_MASTER_PROJECT:-${DEFAULT_GCI_PROJECT}}
     # If the master image is not set, we use the latest GCI image.
@@ -74,8 +78,11 @@ function set-linux-node-image() {
     DEFAULT_GCI_PROJECT=google-containers
     if [[ "${GCI_VERSION}" == "cos"* ]]; then
       DEFAULT_GCI_PROJECT=cos-cloud
+    elif [[ "${GCI_VERSION}" == "ubuntu"* ]]; then
+      DEFAULT_GCI_PROJECT=ubuntu-os-cloud
+    else
+      DEFAULT_GCI_PROJECT=${KUBE_GCE_MASTER_PROJECT}
     fi
-
     # If the node image is not set, we use the latest GCI image.
     # Otherwise, we respect whatever is set by the user.
     NODE_IMAGE=${KUBE_GCE_NODE_IMAGE:-${GCI_VERSION}}
@@ -2059,7 +2066,7 @@ function update-or-verify-gcloud() {
     ${sudo_prefix} gcloud ${gcloud_prompt:-} components update
   else
     local version=$(gcloud version --format=json)
-    python -c'
+    python3 -c'
 import json,sys
 from distutils import version
 
