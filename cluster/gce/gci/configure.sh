@@ -523,10 +523,21 @@ function load-docker-images {
   fi
 }
 
+# Install Containerd
+function install-containerd {
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  echo \
+  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get -y update
+  sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+}
+
 # Downloads kubernetes binaries and kube-system manifest tarball, unpacks them,
 # and places them into suitable directories. Files are placed in /home/kubernetes.
 function install-kube-binary-config {
   cd "${KUBE_HOME}"
+  install-containerd
   local -r server_binary_tar_urls=( $(split-commas "${SERVER_BINARY_TAR_URL}") )
   local -r server_binary_tar="${server_binary_tar_urls[0]##*/}"
   if [[ -n "${SERVER_BINARY_TAR_HASH:-}" ]]; then
