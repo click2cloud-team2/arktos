@@ -3356,7 +3356,7 @@ oom_score = -999
   stream_server_address = "127.0.0.1"
   max_container_log_line_size = ${CONTAINERD_MAX_CONTAINER_LOG_LINE:-262144}
 [plugins.cri.cni]
-  bin_dir = ${bin_folder}
+  bin_dir = "${bin_folder}"
   conf_dir = "/etc/cni/net.d"
   conf_template = "${cni_template_path}"
 [plugins.cri.registry.mirrors."docker.io"]
