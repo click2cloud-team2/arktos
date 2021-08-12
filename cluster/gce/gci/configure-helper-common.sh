@@ -3142,6 +3142,9 @@ function start-cluster-networking {
     bridge)
     start-bridge-networking
     ;;
+    mizar)
+    start-mizar-ds
+    ;;
   esac
 }
 
@@ -3152,6 +3155,16 @@ function start-flannel-ds {
     kubectl apply -f "${KUBE_HOME}/flannel/kube-flannel.yml"
   else 
     echo "failed to install flannel ds, cannot find required yaml file"
+  fi
+}
+
+function start-mizar-ds {
+  if [[ -f "${KUBE_HOME}/mizar/deploy.mizar.yaml" ]]; then
+    echo "installing install ds"
+    sleep 5
+    kubectl apply -f "${KUBE_HOME}//mizar/deploy.mizar.yaml"
+  else
+    echo "failed to install mizar ds, cannot find required yaml file"
   fi
 }
 
@@ -3262,6 +3275,8 @@ EOF
 }
 
 function wait-till-apiserver-ready() {
+  cp /home/kubernetes/bin/kubectl /usr/local/bin/kubectl
+  chmod +x /usr/local/bin/kubectl
   until kubectl get nodes; do
     sleep 5
   done
@@ -3286,6 +3301,10 @@ function setup-containerd {
   local config_path="${CONTAINERD_CONFIG_PATH:-"/etc/containerd/config.toml"}"
   mkdir -p "$(dirname "${config_path}")"
   local cni_template_path="${KUBE_HOME}/cni.template"
+  local bin_folder="${KUBE_HOME}/bin"
+  if [[ "${NETWORK_POLICY_PROVIDER:-"none"}" == "mizar" ]]; then
+    bin_folder="/opt/cni/bin"
+  fi
   cat > "${cni_template_path}" <<EOF
 {
   "name": "k8s-pod-network",
@@ -3337,7 +3356,7 @@ oom_score = -999
   stream_server_address = "127.0.0.1"
   max_container_log_line_size = ${CONTAINERD_MAX_CONTAINER_LOG_LINE:-262144}
 [plugins.cri.cni]
-  bin_dir = "${KUBE_HOME}/bin"
+  bin_dir = ${bin_folder}
   conf_dir = "/etc/cni/net.d"
   conf_template = "${cni_template_path}"
 [plugins.cri.registry.mirrors."docker.io"]

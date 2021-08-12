@@ -313,6 +313,9 @@ function install-cni-network {
     bridge)
     setup-bridge-cni-conf
     ;;
+    mizar)
+    install-mizar-yml
+    ;;
   esac
 }
 
@@ -369,6 +372,17 @@ function install-flannel-yml {
   mv "${KUBE_HOME}/kube-flannel.yml" "${flannel_dir}"
   echo "change docker registry to gcr.io"
   sed -i 's+quay.io/coreos+gcr.io/workload-controller-manager+g' ${flannel_dir}/kube-flannel.yml
+}
+
+####downloading mizar yaml
+function install-mizar-yml {
+  echo "downloading mizar"
+  download-or-bust "" "https://raw.githubusercontent.com/Click2Cloud-Centaurus/Documentation/main/test-yamls/deploy.mizar.yaml"
+  local -r mizar_dir="${KUBE_HOME}/mizar"
+  mkdir -p "${mizar_dir}"
+  mv "${KUBE_HOME}/deploy.mizar.yaml" "${mizar_dir}"
+  echo "change docker registry to gcr.io"
+  sed -i 's+quay.io/coreos+gcr.io/workload-controller-manager+g' ${mizar_dir}/deploy.mizar.yaml
 }
 
 function install-cni-binaries {
