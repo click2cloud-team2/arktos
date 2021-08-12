@@ -540,6 +540,8 @@ function load-docker-images {
 # and places them into suitable directories. Files are placed in /home/kubernetes.
 function install-kube-binary-config {
   cd "${KUBE_HOME}"
+  # Install containerd & docker on each node.
+  install-containerd
   local -r server_binary_tar_urls=( $(split-commas "${SERVER_BINARY_TAR_URL}") )
   local -r server_binary_tar="${server_binary_tar_urls[0]##*/}"
   if [[ -n "${SERVER_BINARY_TAR_HASH:-}" ]]; then
@@ -603,9 +605,6 @@ function install-kube-binary-config {
 
   # Install crictl on each node.
   install-crictl
-
-  # Install containerd & docker on each node.
-  install-containerd
 
   # TODO(awly): include the binary and license in the OS image.
   install-exec-auth-plugin

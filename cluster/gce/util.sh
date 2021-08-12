@@ -56,7 +56,7 @@ if [[ "${MASTER_OS_DISTRIBUTION}" == "gci" ]]; then
     elif [[ "${GCI_VERSION}" == "ubuntu"* ]]; then
       DEFAULT_GCI_PROJECT=ubuntu-os-cloud
     else
-      DEFAULT_GCI_PROJECT=${KUBE_GCE_MASTER_PROJECT}
+      DEFAULT_GCI_PROJECT="${MASTER_IMAGE_PROJECT}"
     fi
     MASTER_IMAGE_PROJECT=${KUBE_GCE_MASTER_PROJECT:-${DEFAULT_GCI_PROJECT}}
     # If the master image is not set, we use the latest GCI image.
@@ -81,7 +81,7 @@ function set-linux-node-image() {
     elif [[ "${GCI_VERSION}" == "ubuntu"* ]]; then
       DEFAULT_GCI_PROJECT=ubuntu-os-cloud
     else
-      DEFAULT_GCI_PROJECT=${KUBE_GCE_MASTER_PROJECT}
+      DEFAULT_GCI_PROJECT="${NODE_IMAGE_PROJECT}"
     fi
     # If the node image is not set, we use the latest GCI image.
     # Otherwise, we respect whatever is set by the user.
