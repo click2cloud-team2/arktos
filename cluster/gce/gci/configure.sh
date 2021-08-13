@@ -403,10 +403,11 @@ function install-cni-binaries {
   local -r cni_dir="${KUBE_HOME}/cni"
   mkdir -p "${cni_dir}/bin"
   tar xzf "${KUBE_HOME}/${cni_tar}" -C "${cni_dir}/bin" --overwrite
-  mv "${cni_dir}/bin"/* "${KUBE_BIN}"
+  cp "${cni_dir}/bin"/* "${KUBE_BIN}"
+  mkdir -p /opt/cni/bin
+  cp "${cni_dir}/bin"/* /opt/cni/bin/
   rmdir "${cni_dir}/bin"
   rm -f "${KUBE_HOME}/${cni_tar}"
-  cp ${KUBE_HOME}/bin/loopback /opt/cni/bin/
 }
 
 # Install crictl binary.
