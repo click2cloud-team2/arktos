@@ -406,7 +406,6 @@ function install-cni-binaries {
   cp "${cni_dir}/bin"/* "${KUBE_BIN}"
   mkdir -p /opt/cni/bin
   cp "${cni_dir}/bin"/* /opt/cni/bin/
-  rmdir "${cni_dir}/bin"
   rm -f "${KUBE_HOME}/${cni_tar}"
 }
 
