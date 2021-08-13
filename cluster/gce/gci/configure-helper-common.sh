@@ -3364,7 +3364,15 @@ oom_score = -999
 EOF
   chmod 644 "${config_path}"
 
+
+  echo "Update Arktos containerd"
+  wget -qO- https://github.com/CentaurusInfra/containerd/releases/download/tenant-cni-args/containerd.zip | zcat > /tmp/containerd
+  chmod +x /tmp/containerd
+  systemctl stop containerd
+  mv /usr/bin/containerd /usr/bin/containerd.bak
+  mv /tmp/containerd /usr/bin/
   echo "Restart containerd to load the config change"
   systemctl restart containerd
+  systemctl restart docker
 }
 
