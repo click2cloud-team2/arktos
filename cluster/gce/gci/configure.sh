@@ -638,9 +638,6 @@ set-broken-motd
 
 KUBE_HOME="/home/kubernetes"
 KUBE_BIN="${KUBE_HOME}/bin"
-if [[ "${NETWORK_POLICY_PROVIDER:-"none"}" == "mizar" ]]; then
-    bin_folder="/opt/cni/bin"
-fi
 # download and source kube-env
 download-kube-env
 source "${KUBE_HOME}/kube-env"
