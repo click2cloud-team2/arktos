@@ -449,6 +449,7 @@ function install-containerd {
   cd /usr
   sudo tar -xvf ${KUBE_HOME}/containerd-1.4.2-linux-amd64.tar.gz
   sudo rm -rf ${KUBE_HOME}/containerd-1.4.2-linux-amd64.tar.gz
+  cd ${KUBE_HOME}
 }
 
 
