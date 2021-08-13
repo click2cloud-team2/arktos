@@ -444,6 +444,11 @@ function install-containerd {
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
   sudo apt-get -y update
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+  cd ${KUBE_HOME}
+  wget https://github.com/containerd/containerd/releases/download/v1.4.2/containerd-1.4.2-linux-amd64.tar.gz
+  cd /usr
+  sudo tar -xvf ${KUBE_HOME}/containerd-1.4.2-linux-amd64.tar.gz
+  sudo rm -rf ${KUBE_HOME}/containerd-1.4.2-linux-amd64.tar.gz
 }
 
 
