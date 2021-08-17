@@ -313,6 +313,9 @@ function install-cni-network {
     bridge)
     setup-bridge-cni-conf
     ;;
+    mizar)
+    install-mizar-yml
+    ;;
   esac
 }
 
@@ -371,6 +374,16 @@ function install-flannel-yml {
   sed -i 's+quay.io/coreos+gcr.io/workload-controller-manager+g' ${flannel_dir}/kube-flannel.yml
 }
 
+# Downloading mizar yaml
+function install-mizar-yml {
+  echo "downloading mizar"
+  download-or-bust "" "https://raw.githubusercontent.com/Click2Cloud-Centaurus/Documentation/main/test-yamls/deploy.mizar.yaml"
+  local -r mizar_dir="${KUBE_HOME}/mizar"
+  mkdir -p "${mizar_dir}"
+  mv "${KUBE_HOME}/deploy.mizar.yaml" "${mizar_dir}"
+  # echo "change docker registry to gcr.io"
+  # sed -i 's+quay.io/coreos+gcr.io/workload-controller-manager+g' ${mizar_dir}/deploy.mizar.yaml
+}
 function install-cni-binaries {
   if [[ -n "${CNI_VERSION:-}" ]]; then
       local -r cni_tar="cni-plugins-amd64-${CNI_VERSION}.tgz"
@@ -389,9 +402,17 @@ function install-cni-binaries {
   local -r cni_dir="${KUBE_HOME}/cni"
   mkdir -p "${cni_dir}/bin"
   tar xzf "${KUBE_HOME}/${cni_tar}" -C "${cni_dir}/bin" --overwrite
-  mv "${cni_dir}/bin"/* "${KUBE_BIN}"
-  rmdir "${cni_dir}/bin"
-  rm -f "${KUBE_HOME}/${cni_tar}"
+  if [[ "${NETWORK_POLICY_PROVIDER:-"none"}" == "mizar" ]]; then
+    mkdir -p /opt/cni/bin
+    mv "${cni_dir}/bin"/* /opt/cni/bin/
+    rmdir "${cni_dir}/bin"
+    rm -f "${KUBE_HOME}/${cni_tar}"
+  else
+    mv "${cni_dir}/bin"/* "${KUBE_BIN}"
+    rmdir "${cni_dir}/bin"
+    rm -f "${KUBE_HOME}/${cni_tar}"
+  fi
+
 }
 
 # Install crictl binary.
@@ -423,6 +444,7 @@ EOF
 }
 
 # Install Docker & Containerd
+# TODO To optimize following installation process
 function install-docker-containerd {
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
   echo \
