@@ -1491,7 +1491,7 @@ function start-collect-pprof {
 # $5: pod name, which should be either etcd or etcd-events
 function prepare-etcd-manifest {
   local host_name=${ETCD_HOSTNAME:-$(hostname -s)}
-  local host_ip=$(python -c "import socket;print(socket.gethostbyname(\"${host_name}\"))")
+  local host_ip=$(python3 -c "import socket;print(socket.gethostbyname(\"${host_name}\"))")
   local etcd_cluster=""
   local cluster_state="new"
   local etcd_protocol="http"
@@ -3159,7 +3159,6 @@ function start-bridge-networking {
   :
 }
 
-
 # Setup working directory for kubelet.
 function setup-kubelet-dir {
     echo "Making /var/lib/kubelet executable for kubelet"
@@ -3262,6 +3261,8 @@ EOF
 }
 
 function wait-till-apiserver-ready() {
+  cp /home/kubernetes/bin/kubectl /usr/local/bin/kubectl
+  chmod +x /usr/local/bin/kubectl
   until kubectl get nodes; do
     sleep 5
   done
@@ -3286,6 +3287,10 @@ function setup-containerd {
   local config_path="${CONTAINERD_CONFIG_PATH:-"/etc/containerd/config.toml"}"
   mkdir -p "$(dirname "${config_path}")"
   local cni_template_path="${KUBE_HOME}/cni.template"
+  local bin_folder="${KUBE_HOME}/bin"
+  if [[ "${NETWORK_POLICY_PROVIDER:-"none"}" == "mizar" ]]; then
+    bin_folder="/opt/cni/bin"
+  fi
   cat > "${cni_template_path}" <<EOF
 {
   "name": "k8s-pod-network",
@@ -3337,7 +3342,7 @@ oom_score = -999
   stream_server_address = "127.0.0.1"
   max_container_log_line_size = ${CONTAINERD_MAX_CONTAINER_LOG_LINE:-262144}
 [plugins.cri.cni]
-  bin_dir = "${KUBE_HOME}/bin"
+  bin_dir = "${bin_folder}"
   conf_dir = "/etc/cni/net.d"
   conf_template = "${cni_template_path}"
 [plugins.cri.registry.mirrors."docker.io"]
@@ -3346,6 +3351,12 @@ EOF
   chmod 644 "${config_path}"
 
   echo "Restart containerd to load the config change"
+  echo "Update Arktos containerd"
+  wget -qO- https://github.com/CentaurusInfra/containerd/releases/download/tenant-cni-args/containerd.zip | zcat > /tmp/containerd
+  chmod +x /tmp/containerd
+  systemctl stop containerd
+  mv /usr/bin/containerd /usr/bin/containerd.bak
+  mv /tmp/containerd /usr/bin/
   systemctl restart containerd
 }
 
