@@ -75,7 +75,7 @@ check_mizar_prerequisite() {
                 continue
             else
                 sudo wget https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/bootstrap.sh -P /tmp/
-                sudo sed -i '3,9d;61,78d' /tmp/bootstrap.sh
+                sudo sed -i '68,88d;3,11d' /tmp/bootstrap.sh
                 sudo bash /tmp/bootstrap.sh
             fi
     done
