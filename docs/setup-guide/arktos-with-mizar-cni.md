@@ -1,29 +1,38 @@
-# Arktos to Enforce the Multi-tenant with Mizar Network Feature
+# Deploy Arktos cluster with Mizar CNI
 
-This document captures the steps applied to an Arktos cluster lab enabling the unique multi-tenant network feature. The machines in this lab used are AWS EC2 t2-large (2 CPUs, 8GB mem), Ubuntu 18.04 LTS.
-
-The steps might change with the progress of development.
-  
-1. Update Kernel
-To check kernel, run following command
+This document captures the steps to deploy an Arktos cluster lab with mizar cni. The machines in this lab used are AWS EC2 t2-large (2 CPUs, 8GB mem), Ubuntu 18.04 LTS.
+ 
+1. Arktos requires a few dependencies to build and run, and a bash script is provided to install them.
+```bash
+wget https://raw.githubusercontent.com/CentaurusInfra/arktos/master/hack/setup-dev-node.sh
+sudo bash setup-dev-node.sh
+git clone https://github.com/CentaurusInfra/arktos.git ~/go/src/k8s.io/arktos
+echo export PATH=$PATH:/usr/local/go/bin\ >> ~/.profile
+echo cd \$HOME/go/src/k8s.io/arktos >> ~/.profile
+source ~/.profile
+```
+   
+2. To check kernel, run following command
 
 ```bash
 uname -a
 ```
 
+If it is greater or equal to version`5.6.0-rc2` then you can skip this step
+
 To update Kernel, download and run:
-If it is `5.6.0-rc2` then you can skip downloading ```kernelupdate.sh```
 ```bash
 wget https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/kernelupdate.sh
-bash kernelupdate.sh
+sudo bash kernelupdate.sh
 ```
 
-2. Start Arktos cluster
+3. Start Arktos cluster
 ```bash
+cd $HOME/go/src/k8s.io/arktos
 CNIPLUGIN=mizar ./hack/arktos-up.sh
 ```
 
-3. Leave the "arktos-up.sh" terminal and opened a another terminal to the master node. Run the following command to confirm that the first network, "default", in system tenant, has already been created. Its state is empty at this moment.
+4. Leave the "arktos-up.sh" terminal and open another terminal. Run the following command to confirm that the first network, "default", in system tenant, has already been created. Its state is empty at this moment.
 ```bash
 ./cluster/kubectl.sh get net
 NAME      TYPE    VPC                      PHASE   DNS
