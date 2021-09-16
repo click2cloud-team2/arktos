@@ -72,11 +72,12 @@ check_mizar_prerequisite() {
     declare -a packages=( netaddr docker grpcio grpcio-tools scapy kubernetes )
         for package in ${packages[@]}; do
             if [[ $(pip3 freeze | grep "\b$package") ]]; then
+                echo "mizar python dependencies already installed"
                 continue
             else
-                sudo wget https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/bootstrap.sh -P /tmp/
-                sudo sed -i '68,88d;3,11d' /tmp/bootstrap.sh
-                sudo bash /tmp/bootstrap.sh
+                echo "installing mizar python dependencies"
+                sudo pip3 install setuptools netaddr docker grpcio grpcio-tools scapy kubernetes
+                echo "done with mizar python dependencies installation"
             fi
     done
 }

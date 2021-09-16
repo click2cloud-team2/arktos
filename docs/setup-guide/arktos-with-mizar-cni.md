@@ -46,4 +46,4 @@ NAME      TYPE   VPC                       PHASE   DNS
 default   mizar  system-default-network    Ready   10.0.0.207
 ```
 
-From now on, you should be able to play with multi-tenant and the network features.
+From now on, you should be able to use the arktos cluster with mizar cni.
