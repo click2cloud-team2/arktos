@@ -22,7 +22,7 @@ sudo bash kernelupdate.sh
 2. Clone the Arktos repository and install the required dependencies:
 
 ```bash
-https://github.com/Click2Cloud-Centaurus/arktos.git ~/go/src/k8s.io/arktos -b default-cni-mizar
+git clone https://github.com/Click2Cloud-Centaurus/arktos.git ~/go/src/k8s.io/arktos -b default-cni-mizar
 sudo bash $HOME/go/src/k8s.io/arktos/hack/setup-dev-node.sh
 echo export PATH=$PATH:/usr/local/go/bin\ >> ~/.profile
 echo cd \$HOME/go/src/k8s.io/arktos >> ~/.profile
