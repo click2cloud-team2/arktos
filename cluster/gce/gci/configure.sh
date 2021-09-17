@@ -556,6 +556,7 @@ function load-docker-images {
     try-load-docker-image "${img_dir}/kube-controller-manager.tar"
     try-load-docker-image "${img_dir}/kube-scheduler.tar"
     try-load-docker-image "${img_dir}/workload-controller-manager.tar"
+    try-load-docker-image "${img_dir}/arktos-network-controller.tar"
   else
     try-load-docker-image "${img_dir}/kube-proxy.tar"
   fi

@@ -29,7 +29,7 @@ REGION=${ZONE%-*}
 RELEASE_REGION_FALLBACK=${RELEASE_REGION_FALLBACK:-false}
 REGIONAL_KUBE_ADDONS=${REGIONAL_KUBE_ADDONS:-true}
 NODE_SIZE=${NODE_SIZE:-n1-standard-2}
-NUM_NODES=${NUM_NODES:-3}
+NUM_NODES=${NUM_NODES:-2}
 NUM_WINDOWS_NODES=${NUM_WINDOWS_NODES:-0}
 MASTER_SIZE=${MASTER_SIZE:-n1-standard-$(get-master-size)}
 MASTER_MIN_CPU_ARCHITECTURE=${MASTER_MIN_CPU_ARCHITECTURE:-} # To allow choosing better architectures.
@@ -424,7 +424,7 @@ STORAGE_BACKEND=${STORAGE_BACKEND:-}
 NETWORK_PROVIDER="${NETWORK_PROVIDER:-cni}" # none, kubenet doesn't work with container runtime, update to cni and flannel
 
 # Network Policy plugin specific settings.
-NETWORK_POLICY_PROVIDER="${NETWORK_POLICY_PROVIDER:-flannel}" # calico kubenet doesn't work with container runtime, update to cni and flannel
+NETWORK_POLICY_PROVIDER="${NETWORK_POLICY_PROVIDER:- }" # calico kubenet doesn't work with container runtime, update to cni and flannel
 
 NON_MASQUERADE_CIDR="0.0.0.0/0"
 

@@ -156,6 +156,7 @@ release_filegroup(
         "//cmd/kube-apiserver",
         "//cmd/kube-controller-manager",
         "//cmd/kube-scheduler",
+        "//cmd/arktos-network-controller,
     ]),
 )
 

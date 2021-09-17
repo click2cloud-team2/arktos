@@ -257,6 +257,7 @@ function load-docker-images {
 	try-load-docker-image "${img_dir}/kube-apiserver.tar"
 	try-load-docker-image "${img_dir}/kube-controller-manager.tar"
 	try-load-docker-image "${img_dir}/kube-scheduler.tar"
+	try-load-docker-image "${img_dir}/arktos-network-controller.tar"
 }
 
 # Computes command line arguments to be passed to kubelet.
