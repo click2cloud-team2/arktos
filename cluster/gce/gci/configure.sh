@@ -65,9 +65,9 @@ function download-kube-env {
       -o "${tmp_kube_env}" \
       http://metadata.google.internal/computeMetadata/v1/instance/attributes/kube-env
     # Convert the yaml format file into a shell-style file.
-    eval $(python -c '''
+    eval $(python3 -c '''
 import pipes,sys,yaml
-for k,v in yaml.load(sys.stdin).iteritems():
+for k,v in yaml.load(sys.stdin).items():
   print("readonly {var}={value}".format(var = k, value = pipes.quote(str(v))))
 ''' < "${tmp_kube_env}" > "${KUBE_HOME}/kube-env")
     rm -f "${tmp_kube_env}"
@@ -155,9 +155,9 @@ function download-kube-master-certs {
       -o "${tmp_kube_master_certs}" \
       http://metadata.google.internal/computeMetadata/v1/instance/attributes/kube-master-certs
     # Convert the yaml format file into a shell-style file.
-    eval $(python -c '''
+    eval $(python3 -c '''
 import pipes,sys,yaml
-for k,v in yaml.load(sys.stdin).iteritems():
+for k,v in yaml.load(sys.stdin).items():
   print("readonly {var}={value}".format(var = k, value = pipes.quote(str(v))))
 ''' < "${tmp_kube_master_certs}" > "${KUBE_HOME}/kube-master-certs")
     rm -f "${tmp_kube_master_certs}"
@@ -195,7 +195,7 @@ function validate-hash {
 # Get default service account credentials of the VM.
 GCE_METADATA_INTERNAL="http://metadata.google.internal/computeMetadata/v1/instance"
 function get-credentials {
-  curl "${GCE_METADATA_INTERNAL}/service-accounts/default/token" -H "Metadata-Flavor: Google" -s | python -c \
+  curl "${GCE_METADATA_INTERNAL}/service-accounts/default/token" -H "Metadata-Flavor: Google" -s | python3 -c \
     'import sys; import json; print(json.loads(sys.stdin.read())["access_token"])'
 }
 
@@ -313,6 +313,9 @@ function install-cni-network {
     bridge)
     setup-bridge-cni-conf
     ;;
+    mizar)
+    install-mizar-yml
+    ;;
   esac
 }
 
@@ -389,9 +392,28 @@ function install-cni-binaries {
   local -r cni_dir="${KUBE_HOME}/cni"
   mkdir -p "${cni_dir}/bin"
   tar xzf "${KUBE_HOME}/${cni_tar}" -C "${cni_dir}/bin" --overwrite
-  mv "${cni_dir}/bin"/* "${KUBE_BIN}"
-  rmdir "${cni_dir}/bin"
-  rm -f "${KUBE_HOME}/${cni_tar}"
+
+  if [[ "${NETWORK_POLICY_PROVIDER:-"none"}" == "mizar" ]]; then
+    mkdir -p /opt/cni/bin
+    mv "${cni_dir}/bin"/* /opt/cni/bin/
+    rmdir "${cni_dir}/bin"
+    rm -f "${KUBE_HOME}/${cni_tar}"
+  else
+    mv "${cni_dir}/bin"/* "${KUBE_BIN}"
+    rmdir "${cni_dir}/bin"
+    rm -f "${KUBE_HOME}/${cni_tar}"
+  fi
+}
+
+# Downloading mizar yaml
+function install-mizar-yml {
+  echo "downloading mizar"
+  download-or-bust "" "https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/etc/deploy/deploy.mizar.yaml"
+  local -r mizar_dir="${KUBE_HOME}/mizar"
+  mkdir -p "${mizar_dir}"
+  mv "${KUBE_HOME}/deploy.mizar.yaml" "${mizar_dir}"
+  # echo "change docker registry to gcr.io"
+  # sed -i 's+quay.io/coreos+gcr.io/workload-controller-manager+g' ${mizar_dir}/deploy.mizar.yaml
 }
 
 # Install crictl binary.
@@ -420,6 +442,16 @@ EOF
   download-or-bust "${crictl_sha1}" "${crictl_path}/${crictl}"
   mv "${KUBE_HOME}/${crictl}" "${KUBE_BIN}/crictl"
   chmod a+x "${KUBE_BIN}/crictl"
+}
+
+# Install Containerd
+function install-containerd {
+  cd ${KUBE_HOME}
+  wget https://github.com/containerd/containerd/releases/download/v1.4.2/containerd-1.4.2-linux-amd64.tar.gz
+  cd /usr
+  sudo tar -xvf ${KUBE_HOME}/containerd-1.4.2-linux-amd64.tar.gz
+  sudo rm -rf ${KUBE_HOME}/containerd-1.4.2-linux-amd64.tar.gz
+  cd ${KUBE_HOME}
 }
 
 function install-exec-auth-plugin {
@@ -527,6 +559,7 @@ function load-docker-images {
 # and places them into suitable directories. Files are placed in /home/kubernetes.
 function install-kube-binary-config {
   cd "${KUBE_HOME}"
+  install-containerd
   local -r server_binary_tar_urls=( $(split-commas "${SERVER_BINARY_TAR_URL}") )
   local -r server_binary_tar="${server_binary_tar_urls[0]##*/}"
   if [[ -n "${SERVER_BINARY_TAR_HASH:-}" ]]; then
