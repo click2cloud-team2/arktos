@@ -444,8 +444,15 @@ EOF
   chmod a+x "${KUBE_BIN}/crictl"
 }
 
-# Install Containerd
-function install-containerd {
+# Install Docker & Containerd
+function install-container-runtime {
+
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  echo \
+  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get -y update
+  sudo apt-get install -y docker-ce docker-ce-cli containerd.io
   cd ${KUBE_HOME}
   wget https://github.com/containerd/containerd/releases/download/v1.4.2/containerd-1.4.2-linux-amd64.tar.gz
   cd /usr
@@ -559,7 +566,7 @@ function load-docker-images {
 # and places them into suitable directories. Files are placed in /home/kubernetes.
 function install-kube-binary-config {
   cd "${KUBE_HOME}"
-  install-containerd
+  install-container-runtime
   local -r server_binary_tar_urls=( $(split-commas "${SERVER_BINARY_TAR_URL}") )
   local -r server_binary_tar="${server_binary_tar_urls[0]##*/}"
   if [[ -n "${SERVER_BINARY_TAR_HASH:-}" ]]; then
