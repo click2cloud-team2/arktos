@@ -1,10 +1,15 @@
-# Arktos deployment with Mizar CNI 
+# Arktos deployment with Mizar CNI
 
 This document is intended for new users to install the Arktos platform with Mizar as the underlying network technology.
 
-Prepare lab machine, the preferred OS is **Ubuntu 18.04**. If you are using AWS, the recommended instance size is ```t2.2xlarge``` and the storage size is ```128GB``` or more
+### Prepare lab machine
 
-For On-pem setup, the preferred OS is **Ubuntu 18.04**. The recommended instance size is ```8 CPU and 32GB RAM``` and the storage size is ```128GB``` or more
+The preferred OS is **Ubuntu 18.04**. 
+
+If you are using AWS, the recommended instance size is ```t2.large``` and the storage size is ```128GB``` or more
+
+If you are using OnPremise, the recommended instance size is ```16 CPU and 32GB RAM``` and the storage size is ```150GB``` or more
+
 The steps might change with the progress of development.
 
 1. Check the kernel version:
@@ -23,16 +28,15 @@ sudo bash kernelupdate.sh
 2. Clone the Arktos repository and install the required dependencies:
 
 ```bash
-git clone https://github.com/Click2Cloud-Centaurus/arktos.git ~/go/src/k8s.io/arktos -b default-cni-mizar
+git clone https://github.com/Click2Cloud-Centaurus/arktos.git ~/go/src/k8s.io/arktos -b c2c-deployment 
 sudo bash $HOME/go/src/k8s.io/arktos/hack/setup-dev-node.sh
 ```
-
 ```bash
 echo export PATH=$PATH:/usr/local/go/bin\ >> ~/.profile
 echo cd \$HOME/go/src/k8s.io/arktos >> ~/.profile
 source ~/.profile
 ```
-  
+
 3. Start Arktos cluster
 ```bash
 CNIPLUGIN=mizar ./hack/arktos-up.sh
@@ -68,9 +72,8 @@ Alternatively, you can write to the default kubeconfig:
 You should see the following output
 ```text
 NAME                              HASHKEY               READY   STATUS    RESTARTS   AGE
-mizar-daemon-qvf8h                3609709351651248785   1/1     Running   0          8m
-mizar-operator-67df55cbd4-fbbtz   2504797451733876877   1/1     Running   0          8m
+mizar-daemon-qvf8h                3609709351651248785   1/1     Running   0          10m
+mizar-operator-67df55cbd4-fbbtz   2504797451733876877   1/1     Running   0          10m
 ```
 
 Now you can use the Arktos cluster with Mizar CNI.
-
