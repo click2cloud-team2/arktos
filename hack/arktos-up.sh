@@ -229,6 +229,11 @@ cleanup()
 
   [[ -n "${FLANNELD_PID-}" ]] && sudo kill "${FLANNELD_PID}" 2>/dev/null
 
+  # Kill arktos-network-controller process
+  if [[ "${CNIPLUGIN}" == "mizar" ]] && [[ ! "$(ps -ax|grep arktos-network-controller | grep -v grep | wc -l)" -eq 0 ]]; then
+    sudo killall arktos-network-controller 2>/dev/null
+  fi
+
   exit 0
 }
 # Check if all processes are still running. Prints a warning once each time
