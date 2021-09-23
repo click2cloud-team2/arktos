@@ -6,7 +6,7 @@ This document is intended for new users to install the Arktos platform with Miza
 
 The preferred OS is **Ubuntu 18.04**. 
 
-If you are using AWS, the recommended instance size is ```t2.large``` and the storage size is ```128GB``` or more
+If you are using AWS, the recommended instance size is ```t2.2xlarge``` and the storage size is ```128GB``` or more
 
 If you are using OnPremise, the recommended instance size is ```16 CPU and 32GB RAM``` and the storage size is ```150GB``` or more
 
