@@ -88,8 +88,8 @@ if [[ ! -e "${CONTAINERD_SOCK_PATH}" ]]; then
   exit 1
 fi
 
-# Install simple cni plugin based on env var CNIPLUGIN (bridge, alktron) before cluster is up.
-# If more advanced cni like Flannel is desired, it should be installed AFTER the clsuter is up;
+# Install simple cni plugin based on env var CNIPLUGIN (bridge, alktron, mizar) before cluster is up.
+# If more advanced cni like Flannel is desired, it should be installed AFTER the cluster is up;
 # in that case, please set ARKTOS-NO-CNI_PREINSTALLED to any no-empty value
 source ${KUBE_ROOT}/hack/arktos-cni.rc
 
@@ -557,6 +557,12 @@ if [[ "${START_MODE}" != "nokubelet" ]]; then
         print_color "Unsupported host OS.  Must be Linux or Mac OS X, kubelet aborted."
         ;;
     esac
+fi
+
+# Applying mizar cni
+if [[ "${CNIPLUGIN}" = "mizar" ]]; then
+  ${KUBECTL} --kubeconfig="${CERT_DIR}/admin.kubeconfig" apply -f https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/etc/deploy/deploy.mizar.yaml
+  ${KUBE_ROOT}/_output/local/bin/linux/amd64/arktos-network-controller --kubeconfig=/var/run/kubernetes/admin.kubeconfig --kube-apiserver-ip="$(hostname -I | awk '{print $1}')" > /tmp/arktos-network-controller.log 2>&1 &
 fi
 
 if [[ -n "${PSP_ADMISSION}" && "${AUTHORIZATION_MODE}" = *RBAC* ]]; then
