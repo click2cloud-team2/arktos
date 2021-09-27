@@ -14,7 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KUBE_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
+KUBE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+
+# Arktos specific network and service support is a feature that each
+# pod is associated to certain network, which has its own DNS service.
+# By default, this feature is enabled in the dev cluster started by this script.
+export DISABLE_NETWORK_SERVICE_SUPPORT=${DISABLE_NETWORK_SERVICE_SUPPORT:-}
 
 IS_SCALE_OUT=${IS_SCALE_OUT:-"false"}
 source "${KUBE_ROOT}/hack/lib/common-var-init.sh"
@@ -222,12 +227,12 @@ cleanup()
        rm -f -r "${VIRTLET_LOG_DIR}"
   fi
 
-  [[ -n "${FLANNELD_PID-}" ]] && sudo kill "${FLANNELD_PID}" 2>/dev/null
-
-# Kill arktos-network-controller process
+  # Kill arktos-network-controller process
   if [[ "${CNIPLUGIN}" == "mizar" ]] && [[ ! "$(ps -ax|grep arktos-network-controller | grep -v grep | wc -l)" -eq 0 ]]; then
     sudo killall arktos-network-controller 2>/dev/null
   fi
+
+  [[ -n "${FLANNELD_PID-}" ]] && sudo kill "${FLANNELD_PID}" 2>/dev/null
 
   exit 0
 }
@@ -552,6 +557,12 @@ if [[ "${START_MODE}" != "nokubelet" ]]; then
         print_color "Unsupported host OS.  Must be Linux or Mac OS X, kubelet aborted."
         ;;
     esac
+fi
+
+# Applying mizar cni
+if [[ "${CNIPLUGIN}" = "mizar" ]]; then
+  ${KUBECTL} --kubeconfig="${CERT_DIR}/admin.kubeconfig" apply -f https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/etc/deploy/deploy.mizar.yaml
+  ${KUBE_ROOT}/_output/local/bin/linux/amd64/arktos-network-controller --kubeconfig=/var/run/kubernetes/admin.kubeconfig --kube-apiserver-ip="$(hostname -I | awk '{print $1}')" > /tmp/arktos-network-controller.log 2>&1 &
 fi
 
 if [[ -n "${PSP_ADMISSION}" && "${AUTHORIZATION_MODE}" = *RBAC* ]]; then
