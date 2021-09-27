@@ -14,12 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KUBE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-
-# Arktos specific network and service support is a feature that each
-# pod is associated to certain network, which has its own DNS service.
-# By default, this feature is enabled in the dev cluster started by this script.
-export DISABLE_NETWORK_SERVICE_SUPPORT=${DISABLE_NETWORK_SERVICE_SUPPORT:-}
+KUBE_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 
 IS_SCALE_OUT=${IS_SCALE_OUT:-"false"}
 source "${KUBE_ROOT}/hack/lib/common-var-init.sh"
@@ -44,6 +39,25 @@ if [[ "${ENABLE_POD_VERTICAL_SCALING:-false}" == "true" ]]; then
     FEATURE_GATES="${FEATURE_GATES},InPlacePodVerticalScaling=true"
 fi
 FEATURE_GATES="${FEATURE_GATES},WorkloadInfoDefaulting=true,QPSDoubleGCController=true,QPSDoubleRSController=true"
+
+echo "DBG: Flannel CNI plugin will be installed AFTER cluster is up"
+[ "${CNIPLUGIN}" == "flannel" ] && ARKTOS_NO_CNI_PREINSTALLED="y"
+
+# check for network service support flags
+if [ -z ${DISABLE_NETWORK_SERVICE_SUPPORT} ]; then # when enabled
+  # kubelet enforces per-network DNS ip in pod
+  FEATURE_GATES="${FEATURE_GATES},MandatoryArktosNetwork=true"
+  # tenant controller automatically creates a default network resource for new tenant
+  ARKTOS_NETWORK_TEMPLATE="${KUBE_ROOT}/hack/testdata/default-flat-network.tmpl"
+else # when disabled
+  # kube-apiserver not to enforce deployment-network validation
+  DISABLE_ADMISSION_PLUGINS="DeploymentNetwork"
+fi
+
+echo "DBG: effective feature gates ${FEATURE_GATES}"
+echo "DBG: effective disabling admission plugins ${DISABLE_ADMISSION_PLUGINS}"
+echo "DBG: effective default network template file is ${ARKTOS_NETWORK_TEMPLATE}"
+echo "DBG: kubelet arg RESOLV_CONF is ${RESOLV_CONF}"
 
 # warn if users are running with swap allowed
 if [ "${FAIL_SWAP_ON}" == "false" ]; then
@@ -175,6 +189,9 @@ cleanup()
   [[ -n "${WORKLOAD_CTLRMGR_PID-}" ]] && mapfile -t WORKLOAD_CTLRMGR_PIDS < <(pgrep -P "${WORKLOAD_CTLRMGR_PID}" ; ps -o pid= -p "${WORKLOAD_CTLRMGR_PID}")
   [[ -n "${WORKLOAD_CTLRMGR_PIDS-}" ]] && sudo kill "${WORKLOAD_CTLRMGR_PIDS[@]}" 2>/dev/null
 
+  # Check if the arktos network controller is still running
+  [[ -n "${ARKTOS_NETWORK_CONTROLLER_PID-}" ]] && mapfile -t ARKTOS_NETWORK_CONTROLLER_PID < <(pgrep -P "${ARKTOS_NETWORK_CONTROLLER_PID}" ; ps -o pid= -p "${ARKTOS_NETWORK_CONTROLLER_PID}")
+  [[ -n "${ARKTOS_NETWORK_CONTROLLER_PID-}" ]] && sudo kill "${ARKTOS_NETWORK_CONTROLLER_PID[@]}" 2>/dev/null
 
   # Check if the kubelet is still running
   [[ -n "${KUBELET_PID-}" ]] && mapfile -t KUBELET_PIDS < <(pgrep -P "${KUBELET_PID}" ; ps -o pid= -p "${KUBELET_PID}")
@@ -205,7 +222,9 @@ cleanup()
        rm -f -r "${VIRTLET_LOG_DIR}"
   fi
 
-  # Kill arktos-network-controller process
+  [[ -n "${FLANNELD_PID-}" ]] && sudo kill "${FLANNELD_PID}" 2>/dev/null
+
+# Kill arktos-network-controller process
   if [[ "${CNIPLUGIN}" == "mizar" ]] && [[ ! "$(ps -ax|grep arktos-network-controller | grep -v grep | wc -l)" -eq 0 ]]; then
     sudo killall arktos-network-controller 2>/dev/null
   fi
@@ -223,6 +242,11 @@ function healthcheck {
   if [[ -n "${CTLRMGR_PID-}" ]] && ! sudo kill -0 "${CTLRMGR_PID}" 2>/dev/null; then
     warning_log "kube-controller-manager terminated unexpectedly, see ${CTLRMGR_LOG}"
     CTLRMGR_PID=
+  fi
+
+  if [[ -n "${ARKTOS_NETWORK_CONTROLLER_PID-}" ]] && ! sudo kill -0 "${ARKTOS_NETWORK_CONTROLLER_PID}" 2>/dev/null; then
+    warning_log "arktos network controller terminated unexpectedly, see ${ARKTOS_NETWORK_CONTROLLER_LOG}"
+    ARKTOS_NETWORK_CONTROLLER_PID=
   fi
 
 #  if [[ -n "${WORKLOAD_CTLRMGR_PID-}" ]] && ! sudo kill -0 "${WORKLOAD_CTLRMGR_PID}" 2>/dev/null; then
@@ -494,6 +518,10 @@ if [[ "${START_MODE}" != "kubeletonly" ]]; then
   #cluster/kubectl.sh create -f hack/runtime/workload-controller-manager-clusterrolebinding.yaml
 
   kube::common::start_controller_manager
+
+  # unless arktos service support is disabled, start arktos network controller
+  [ ${DISABLE_NETWORK_SERVICE_SUPPORT} ] ||  kube::common::start_arktos_network_ontroller
+
 #  kube::common::start_workload_controller_manager
   if [[ "${EXTERNAL_CLOUD_PROVIDER:-}" == "true" ]]; then
     start_cloud_controller_manager
@@ -526,12 +554,6 @@ if [[ "${START_MODE}" != "nokubelet" ]]; then
     esac
 fi
 
-# Applying mizar cni
-if [[ "${CNIPLUGIN}" = "mizar" ]]; then
-  ${KUBECTL} --kubeconfig="${CERT_DIR}/admin.kubeconfig" apply -f https://raw.githubusercontent.com/Click2Cloud-Centaurus/mizar/grpcio-fix/etc/deploy/deploy.mizar.yaml
-  ${KUBE_ROOT}/_output/local/bin/linux/amd64/arktos-network-controller --kubeconfig=/var/run/kubernetes/admin.kubeconfig --kube-apiserver-ip="$(hostname -I | awk '{print $1}')" > /tmp/arktos-network-controller.log 2>&1 &
-fi
-
 if [[ -n "${PSP_ADMISSION}" && "${AUTHORIZATION_MODE}" = *RBAC* ]]; then
   create_psp_policy
 fi
@@ -546,6 +568,13 @@ ${KUBECTL} --kubeconfig="${CERT_DIR}/admin.kubeconfig" api-resources &>/dev/null
 echo "*******************************************"
 echo "Setup Arktos components ..."
 echo ""
+
+# todo: start flannel daemon deterministically, instead of waiting for arbitrary time
+if [ "${CNIPLUGIN}" == "flannel" ]; then
+    echo "Installing Flannel cni plugin..."
+    sleep 30  #need sometime for KCM to be fully functioning
+    install_flannel
+fi
 
 while ! cluster/kubectl.sh get nodes --no-headers | grep -i -w Ready; do sleep 3; echo "Waiting for node ready at api server"; done
 
