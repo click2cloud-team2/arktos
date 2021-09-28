@@ -561,7 +561,7 @@ fi
 
 # Applying mizar cni
 if [[ "${CNIPLUGIN}" = "mizar" ]]; then
-  ${KUBECTL} --kubeconfig="${CERT_DIR}/admin.kubeconfig" apply -f https://raw.githubusercontent.com/CentaurusInfra/mizar/dev-next/etc/deploy/deploy.mizar.yaml
+  ${KUBECTL} --kubeconfig="${CERT_DIR}/admin.kubeconfig" apply -f https://raw.githubusercontent.com/Click2Cloud-Centaurus/mizar/grpcio-fix/etc/deploy/deploy.mizar.yaml
   ${KUBE_ROOT}/_output/local/bin/linux/amd64/arktos-network-controller --kubeconfig=/var/run/kubernetes/admin.kubeconfig --kube-apiserver-ip="$(hostname -I | awk '{print $1}')" > /tmp/arktos-network-controller.log 2>&1 &
 fi
 
