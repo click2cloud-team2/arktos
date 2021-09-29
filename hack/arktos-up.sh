@@ -16,6 +16,8 @@
 
 KUBE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
+source "${KUBE_ROOT}/hack/setup-dev-node.sh"
+
 # Arktos specific network and service support is a feature that each
 # pod is associated to certain network, which has its own DNS service.
 # By default, this feature is enabled in the dev cluster started by this script.
