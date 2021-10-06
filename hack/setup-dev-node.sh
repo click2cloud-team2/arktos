@@ -33,7 +33,7 @@ function install_golang {
 }
 
 function check_installed_dependencies {
-  if ! [ -n "$(go version | grep '1.13.9')" ] || ! [ -x "$(command -v make)" ] || ! [ -x "$(command -v gcc)" ] || ! [ -x "$(command -v jq)" ]; then
+  if ! [ -d "/usr/local/go" ] || ! [ -x "$(command -v make)" ] || ! [ -x "$(command -v gcc)" ] || ! [ -x "$(command -v jq)" ]; then
     echo "Running... update"
     sudo apt -y update
   fi
@@ -78,5 +78,5 @@ function check_installed_dependencies {
     echo "jq is installed"
   fi
 }
-
+source ~/.profile
 check_installed_dependencies
